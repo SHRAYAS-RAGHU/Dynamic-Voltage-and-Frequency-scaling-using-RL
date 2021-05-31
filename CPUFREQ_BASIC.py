@@ -31,7 +31,7 @@ for fre in avail_freq[1:]:
     except:
         print('INCORRECT FREQ')
     freq_table.append(cpu.get_frequencies())
-print(freq_table)
+print(*freq_table, sep = '\n')
 
 ######## RESETTING THE GOVERNOR TO ON-DEMAND
 cpu.set_governors('ondemand')

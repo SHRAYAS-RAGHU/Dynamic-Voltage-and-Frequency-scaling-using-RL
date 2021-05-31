@@ -3,11 +3,12 @@ import time
 from cpufreq import cpuFreq
 cpu = cpuFreq()
 
-def loop():
+a = list(range(100000))
+random.shuffle(a)
+
+def loop(a):
     start = time.time()
-    a = list(range(100000))
-    random.shuffle(a)
-    a = sorted(a)
+    b = sorted(a)
     for i in range(100000):
         pass
     end =  time.time()

@@ -4,7 +4,7 @@ import random
 import subprocess
 from cpufreq import cpuFreq
 cpu = cpuFreq()
-import csv
+import pandas as pd
 
 vcgm = Vcgencmd()
 
@@ -50,10 +50,10 @@ for fre in avail_freq:
     data['cpu_utils'].append(cpu_utilisation())                              
     data['exec_time'].append(e_t)
 
-with open('rew_stats.csv', 'w') as f:
-    wrt = csv.writer(f)
-    for key, val in data.items():
-        wrt.writerow([key, val])
+data_F = pd.DataFrame(data)
+data_F.to_csv('rew_stats.csv')
+print(data_F)
+
 
                               
 

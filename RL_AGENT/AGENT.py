@@ -4,8 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-s = [51.1, 0.85, 14.07, 9.849]
-
 class DQN_PRED(nn.Module):
     def __init__(self, lr):
         super().__init__()

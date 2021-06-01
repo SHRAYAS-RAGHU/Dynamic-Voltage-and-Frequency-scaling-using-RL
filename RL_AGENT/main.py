@@ -16,6 +16,6 @@ for i in range(EPISODE):
     STATE = np.append(STATE, sum(AVG_CPU_UTILS)/10)
     
     ACTION = 0
-cpu.set_governors('ondemand')
+
                               
 

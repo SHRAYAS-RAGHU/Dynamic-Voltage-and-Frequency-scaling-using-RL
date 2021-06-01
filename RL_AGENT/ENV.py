@@ -1,12 +1,12 @@
 import subprocess
 from vcgencmd import Vcgencmd
 import time
-vcgm = Vcgencmd()
 from cpufreq import cpuFreq
 
 class env:
     def __init__(self):
         self.cpu = cpuFreq()
+        self.vcgm = Vcgencmd()
         self.cpu.set_governors('userspace')
 
     @staticmethod
@@ -24,8 +24,8 @@ class env:
         return cpu_usage
     
     def state_values(self):
-        temp = vcgm.measure_temp()
-        volt = vcgm.measure_volts('core')
+        temp = self.vcgm.measure_temp()
+        volt = self.vcgm.measure_volts('core')
         cpu_utils = env.cpu_utilisation()
     
     def step(self, action):

@@ -7,55 +7,50 @@ import torch.optim as optim
 s = [51.1, 0.85, 14.07, 9.849]
 
 class DQN_PRED(nn.Module):
-    def __init__(self):
+    def __init__(self, lr):
         super().__init__()
         self.lin = nn.Sequential(
                                 nn.Linear(4, 20, bias=True),
                                 nn.BatchNorm2d(10),
                                 nn.ReLU(inplace=True),
                                 nn.Linear(20, 10, bias=True),
-                                nn.Softmax(dim=1)
                                 )
+        self.optimiser = optim.Adam(lr = lr)
+        self.loss = nn.MSELoss()
+
     def forward(self, x):
         inp = T.tensor(x)
-        #inp = inp.unsqueeze(dim=0)#batchsize,d,h,w
-        #inp = inp.unsqueeze(dim=1)
         inp = self.lin(inp)
         return inp
+
 class Agent(object):
-    def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions, max_mem_size = 10000, eps_end = 0.01, eps_dec = 0.996):
+    def __init__(self, gamma, epsilon, lr, batch_size, max_mem_size = 10000, eps_end = 0.01, eps_dec = 0.996):
         self.gamma = gamma
         self.epsilon = epsilon
-        self.input_dims = input_dims
         self.lr = lr
         self.batch_size = batch_size
         self.eps_min = eps_end
         self.eps_dec = eps_dec
-        self.n_actions = n_actions
         self.mem_size = max_mem_size
         self.mem_cntr = 0
 
-        self.action_space = np.arange(0, self.n_actions, dtype=np.int32)
+        self.Q_eval = DQN_PRED(lr)
 
-        self.Q_eval = DQN_PRED(lr, input_dims=input_dims, fc1_dim=512, fc2_dim=512, n_actions=self.n_actions)
-
-        self.state_memory = np.zeros((self.mem_size, *input_dims))#(10000,4) 4 states are there
+        self.state_memory = np.zeros((self.mem_size, 4))             # (10000,4) STATE VECTOR CONTAINS 4 VALUES
             
-        self.action_memory = np.zeros((self.mem_size, self.n_actions), dtype=np.uint8)#(10000,10) 10 actions
+        self.action_memory = np.zeros(self.mem_size, dtype=np.float32)
 
         self.reward_memory = np.zeros(self.mem_size)
             
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.uint8)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)
     
 
-    def store_transitions(self, state, action, reward, state_, terminal):#for storing the parameters during the training
+    def store_transitions(self, state, action, reward, state_, terminal):     # STORING THE TRANSITIONS IN REPLAY MEMORY
         index = self.mem_cntr % self.mem_size
             
         self.state_memory[index] = state
 
-        actions = np.zeros(self.n_actions)
-        actions[action] = 1.0
-        self.action_memory[index] = actions
+        self.action_memory[index] = action
             
         self.reward_memory[index] = reward
         self.state_memory[index+1] = state_
@@ -63,28 +58,30 @@ class Agent(object):
             
         self.mem_cntr += 1
 
-    def choose_actions(self, observation):#epsilon greedy policy has been used here to choose actions
+    def choose_actions(self, observation):                                   # EPSILON GREEDY EXPLORATION
         rand = np.random.random()
+
         if rand < self.epsilon:
-            action = np.random.choice(self.action_space)
+            action = np.random.choice(list(range(10)))
         else:
             actions = self.Q_eval.forward(observation)
             action = T.argmax(actions).item()
+
         return action
 
     def learn(self):
         if self.mem_cntr > self.batch_size:
 
-            self.Q_eval.optimizer.zero_grad()
+            self.Q_eval.optimizer.zero_grad()                               # FOR NULLIFYING GRADIENTS OF PREV STEPS OR PREV BATCHES
 
-            max_mem = self.mem_cntr if self.mem_cntr < self.mem_size else self.mem_size # not to exceed the total mem size.
+            max_mem = self.mem_cntr \
+                if self.mem_cntr < self.mem_size else self.mem_size         # NOT TO EXCEED THE TOTAL REPLAY MEMORY SIZE
 
-            batch = np.random.choice(max_mem, self.batch_size)#selecting batchsize no of samples from max_mem randomly
+            batch = np.random.choice(max_mem, self.batch_size)              # SELECTING BATCHSIZE NO. OF SAMPLES FROM MAXMEM RANDOMLY
 
             state_batch = self.state_memory[batch]
 
             action_batch = self.action_memory[batch]
-            action_indices = np.array(np.where(action_batch == 1)[1])#identifying which action among 10 actions is set to one
                 
             reward_batch = self.reward_memory[batch]
             terminal_batch = self.terminal_memory[batch]
@@ -93,16 +90,20 @@ class Agent(object):
             reward_batch = T.Tensor(reward_batch)
             terminal_batch = T.Tensor(terminal_batch)
 
-            q_eval = self.Q_eval.forward(state_batch)
-                
-            q_target = q_eval.clone()
-            q_next = self.Q_eval.forward(new_state_batch)
+            q_s_a = self.Q_eval.forward(state_batch)                                 # Q_PRED
+            q_target = q_s_a.clone()
+
+            q_S_A = self.Q_eval.forward(new_state_batch)
+
             batch_index = np.arange(self.batch_size, dtype=np.int32)
         
-            q_target[batch_index, action_indices] = reward_batch + self.gamma * T.max(q_next, dim=1)[0] * terminal_batch #bellman equation to update the q value
+            q_target[batch_index, action_batch] = reward_batch \
+                        + self.gamma * T.max(q_S_A, dim=1)[0] * terminal_batch       # Q_TARGET
 
-            self.epsilon = self.epsilon * self.eps_dec if self.epsilon > self.eps_min else self.eps_min
-            loss = self.Q_eval.loss(q_target, q_eval)
+            self.epsilon = self.epsilon * self.eps_dec \
+                if self.epsilon > self.eps_min else self.eps_min 
+
+            loss = self.Q_eval.loss(q_target, q_s_a)
             loss.backward()
 
             self.Q_eval.optimizer.step()

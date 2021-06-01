@@ -33,8 +33,7 @@ def cpu_utilisation():
     cpu_usage = float(s[0]) + float(s[2])                           # CPU USAGE IS THE FIRST ELEMENT OF THE LIST 
     return cpu_usage
 
-print('Ondemand', vcgm.measure_temp(), vcgm.measure_volts('core'), cpu_utilisation(),  loop(a))
-data = {'cpu_freq': [], 'cpu_temp': [], 'cpu_volt': [], 'cpu_utils': [], 'exec_time': []}
+data = {'GOVERNOR':['OD'], 'cpu_freq': [cpu.get_frequencies()[0]/1000], 'cpu_temp': [vcgm.measure_temp()], 'cpu_volt': [vcgm.measure_volts('core')], 'cpu_utils': [cpu_utilisation()], 'exec_time': [loop(a)]}
 
 cpu.set_governors('userspace')
 avail_freq = cpu.available_frequencies
@@ -44,6 +43,7 @@ for fre in avail_freq:
     except:
         print('INCORRECT FREQ')
     e_t = loop(a)
+    data['GOVERNOR'].append('US')
     data['cpu_freq'].append(fre//1000)
     data['cpu_temp'].append(vcgm.measure_temp())
     data['cpu_volt'].append(vcgm.measure_volts('core'))

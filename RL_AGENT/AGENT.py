@@ -22,14 +22,14 @@ class DQN_PRED(nn.Module):
         return inp
 
 class Agent(object):
-    def __init__(self, gamma, epsilon, lr, batch_size, max_mem_size = 10000, eps_end = 0.01, eps_dec = 0.996):
+    def __init__(self, gamma, epsilon, lr, batch_size):
         self.gamma = gamma
         self.epsilon = epsilon
         self.lr = lr
         self.batch_size = batch_size
-        self.eps_min = eps_end
-        self.eps_dec = eps_dec
-        self.mem_size = max_mem_size
+        self.eps_min = 0.01
+        self.eps_dec = 0.996
+        self.mem_size = 10000
         self.mem_cntr = 0
 
         self.Q_eval = DQN_PRED(lr)

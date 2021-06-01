@@ -1,6 +1,5 @@
 import subprocess
 from vcgencmd import Vcgencmd
-import time
 from cpufreq import cpuFreq
 import numpy as np
 
@@ -8,7 +7,10 @@ class env:
     def __init__(self):
         self.cpu = cpuFreq()
         self.vcgm = Vcgencmd()
-        self.cpu.set_governors('userspace')
+        try:
+            self.cpu.set_governors('userspace')
+        except:
+            print('UNABLE TO SET GOVERNOR')
         self.AVG_CPU_UTILS = np.zeros((10,))
         self.ind = 0
 
@@ -51,8 +53,9 @@ class env:
         try:
             self.cpu.set_frequencies(action)
         except:
-            print('UNABLE TO SET USERSPACE GOVERNOR')
-        return env.next_state(), env.reward(env.next_state())        
+            print('UNABLE TO SET FREQ')
+        done = False
+        return env.next_state(), env.reward(env.next_state()), done         
 
 
     

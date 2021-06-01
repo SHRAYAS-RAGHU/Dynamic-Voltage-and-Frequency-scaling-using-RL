@@ -5,7 +5,6 @@ import numpy as np
 from ENV import env                                 # raspi 4 environment
 agent = env()                                       # object for class env
 
-
 EPISODE = 10
 STATE = np.array(agent.reset())
 

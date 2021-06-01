@@ -11,8 +11,8 @@ STATE = np.array(raspi_env.reset())                                         # GR
 
 for i in range(EPISODE):
     ACTION = agent.choose_actions(STATE)
-    NEXT_STATE, REW, DONE = env.step(ACTION)                                      # TAKING THE ACTION
-    agent.store_transitions(STATE, ACTION, REW, NEXT_STATE, DONE)                 # STORING THE TRANSITIONS TO REPLAY MEMORY
+    NEXT_STATE, REW, DONE = env.step(ACTION)                                # TAKING THE ACTION
+    agent.store_transitions(STATE, ACTION, REW, NEXT_STATE, DONE)           # STORING THE TRANSITIONS TO REPLAY MEMORY
     agent.learn()
 
 

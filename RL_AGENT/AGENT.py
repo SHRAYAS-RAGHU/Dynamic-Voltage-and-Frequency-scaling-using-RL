@@ -100,5 +100,3 @@ class Agent(object):
             loss.backward()                                                                 # BACKPROPAGATING THE LOSS TO FING GRADIENTS
 
             self.Q_eval.optimizer.step()                                                    # UPDATING THE PARAMETERS I.E WEIGHTS USING GRADIENT DESCENT FOR THE Q_VALUE FUNCTION
-
-    

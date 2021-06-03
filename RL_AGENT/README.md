@@ -1,3 +1,4 @@
+https://www.tecmint.com/linux-cpu-load-stress-test-with-stress-ng-tool/
 # DEEP Q - NETWORK
   We use a neural network to approximate the Q function:
   <p align = 'center'>

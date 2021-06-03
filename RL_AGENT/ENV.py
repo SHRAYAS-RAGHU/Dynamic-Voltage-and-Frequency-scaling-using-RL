@@ -45,8 +45,8 @@ class env():
         if 30 < state_info[2] < 60:
             util_rew = 1
         if 60 < state_info[2] < 80:
-            util_rew = state_info[2] // 20
-        if state_info[2] < 30:
+            util_rew = -state_info[2] // 20
+        if state_info[2] > 80:
             util_rew = -50
             
         return temp_rew + util_rew

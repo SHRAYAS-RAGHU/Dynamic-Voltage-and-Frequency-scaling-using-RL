@@ -1,7 +1,7 @@
 import subprocess                                               # TO INVOKE TERMINAL FROM PYTHON
 import csv                                                      # SAVING THE MEASURED PARAMS TO A CSV FILE
                                                                 # FOR CPU UTILISATION $ iostat -c 
-for i in range(100000):    
+for i in range(2):    
     io_c = subprocess.Popen(['iostat', '-c'], \
                             stdout=subprocess.PIPE, \
                             shell=False, stderr=subprocess.PIPE)

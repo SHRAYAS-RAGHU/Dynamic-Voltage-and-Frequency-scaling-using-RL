@@ -7,7 +7,7 @@ raspi_env = env()                                                           # IN
 from AGENT import Agent
 agent  = Agent(gamma=0.99, epsilon=0.2, lr = 0.001, batch_size = 4)         # CREATING INSTANCE OF AGENT CLASS
 EPISODE = 10
-STATE = np.array(raspi_env.reset())                                         # GRABBING THE INITIAL STATE
+STATE = np.array(raspi_env.get_state()())                                         # GRABBING THE INITIAL STATE
 
 for i in range(EPISODE):
     ACTION = agent.choose_actions(STATE)

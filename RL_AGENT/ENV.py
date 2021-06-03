@@ -8,6 +8,7 @@ class env():
     def __init__(self):
         self.cpu = cpuFreq()
         self.vcgm = Vcgencmd()
+
         try:
             self.cpu.set_governors('userspace')
         except:
@@ -30,11 +31,12 @@ class env():
         return [*self.temp_volt_utils()]
 
     def reward(self, state_info):
+        self.done = False
         if state_info[0] < 40:
             temp_rew = 1
             self.done = True
         elif 40 < state_info[0] < 70:
-            temp_rew = -state_info[0] // 20
+            temp_rew = -state_info[0] / 20
         elif 70 < state_info[0] < 80:
             temp_rew = -20
         else:
@@ -42,6 +44,7 @@ class env():
             
         if state_info[2] < 30:
             self.done = True
+            util_rew = 0
         if 30 < state_info[2] < 60:
             util_rew = 1
         if 60 < state_info[2] < 80:
@@ -54,7 +57,7 @@ class env():
             
     def step(self, action):
         freq = self.cpu.available_frequencies     
-        action = freq.index(action)                                # action given to a function is in range(0,10). convert to corresponding frequency
+        action = freq[action]                                # action given to a function is in range(0,10). convert to corresponding frequency
         
         try:
             self.cpu.set_frequencies(action)

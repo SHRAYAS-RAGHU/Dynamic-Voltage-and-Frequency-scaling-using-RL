@@ -9,15 +9,17 @@ class DQN_PRED(nn.Module):
         super().__init__()
         self.lin = nn.Sequential(
                                 nn.Linear(4, 20, bias=True),
-                                nn.BatchNorm2d(10),
                                 nn.ReLU(inplace=True),
                                 nn.Linear(20, 10, bias=True),
                                 )
-        self.optimiser = optim.Adam(lr = lr)
+        #self.optimiser = optim.Adam(lr=lr)
         self.loss = nn.MSELoss()                                                            # MSE LOSS USED, (Q_TARGET - Q_PRED) ** 2
 
     def forward(self, x):
+        inp = np.reshape(x, (1, 4))
         inp = T.tensor(x)
+        inp = inp.unsqueeze(0)
+        inp = inp.unsqueeze(1)
         inp = self.lin(inp)
         return inp
 
@@ -32,7 +34,7 @@ class Agent(object):
         self.mem_size = 10000                                                               # MAXIMUM REPLAY MEMORY
         self.mem_cntr = 0                                                                   # INDEX FOR REPLAY MEMORY
 
-        self.Q_eval = DQN_PRED(lr)                                                          # INSTANCE FOR NEURAL NETWORK CLASS
+        self.Q_eval = DQN_PRED(self.lr)                                                          # INSTANCE FOR NEURAL NETWORK CLASS
 
         self.state_memory = np.zeros((self.mem_size, 4))                                    # (10000,4) STATE VECTOR CONTAINS 4 VALUES
             

@@ -2,6 +2,7 @@ import subprocess
 from vcgencmd import Vcgencmd
 from cpufreq import cpuFreq
 import numpy as np
+from EXEC_TIME import exec_time
 
 class env():
     def __init__(self):
@@ -15,32 +16,18 @@ class env():
         self.AVG_CPU_UTILS = np.zeros((10,))
         self.ind = 0
         self.done = False
-
-    @staticmethod
-    def cpu_utilisation():
-        io_c = subprocess.Popen(['iostat', '-c'], \
-                                stdout=subprocess.PIPE, \
-                                shell=False, stderr=subprocess.PIPE)
-        s = io_c.communicate()[0]                                       # OUTPUT OF COMMAND STORED IN 'S' AS BYTES
-
-        s = str(s)                                                      # CONVERTING BYTE DATA TO STRING FOR PROCESSING
-        s = s.split('\\n')[3]                                           # OBTAINING CPU USAGE STATS ALONE AFTER SPLITTING SEPARATE LINES INTO LISTS
-        s = s.strip(' ')                                                # STRIPPING INITIAL SPACES TO OBTAIN THE SET OF 5 NOS.
-        s = s.split('   ')                                              # CONVERTING SET OF 5 VALUES INTO A LIST BBY SPLITTING
-        cpu_usage = float(100 - float(s[-1]))                           # CPU USAGE IS THE FIRST ELEMENT OF THE LIST 
-        return cpu_usage
     
     def temp_volt_utils(self):
         i = self.ind if self.ind < 10 else self.ind % 10
-        cpu_utils = env.cpu_utilisation()
+        cpu_utils = exec_time(3)
         self.AVG_CPU_UTILS[i] = cpu_utils  
         self.ind += 1
         return self.vcgm.measure_temp(), \
             self.vcgm.measure_volts('core'), \
-                env.cpu_utilisation(), sum(self.AVG_CPU_UTILS)/10
+                cpu_utils, sum(self.AVG_CPU_UTILS)/10
 
     def get_state(self):
-        return [*env.temp_volt_utils()]
+        return [*self.temp_volt_utils()]
 
     def reward(self, state_info):
         if state_info[0] < 40:
@@ -74,8 +61,8 @@ class env():
         except:
             print('UNABLE TO SET FREQ')
         
-        next_ = env.get_state() 
-        return next_, env.reward(next_), self.done         
+        next_ = self.get_state() 
+        return next_, self.reward(next_), self.done         
 
 
     

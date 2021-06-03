@@ -1,18 +1,18 @@
+"""
+run the command from terminal :sudo stress --cpu 4 --io 3 --vm 2 --vm-bytes 128M --timeout 10s
+run the code from vS_terminal : python3 exec_time.py
+"""
 import subprocess
-import re  
 
-for i in range(1000):
-    a = subprocess.Popen(['time','-f', '%P','python3','WORK.py'],
-        cwd='/home/pi/Desktop/PROJECT/RL_AGENT',stdout=subprocess.PIPE
-        ,stderr=subprocess.PIPE,shell=False)
-    print(str(a.communicate()[1]).lstrip('b\'').rstrip('\\n\''))
-
-"""
-a = str(a.communicate()[1])
-a = a.split('\\n')[:-1]
-b = []
-for i in a:
-    x = re.search(r'[\d.]+', i)
-    b.append(float(x.group()))
-print(b)
-"""
+def exec_time(n):
+    n_measure = n
+    io_c = subprocess.Popen(['iostat', '-c', '1', str(n_measure)], \
+                                stdout=subprocess.PIPE, \
+                                shell=False, stderr=subprocess.PIPE, cwd='/home/pi/Desktop/PROJECT/RL_AGENT')
+    s = io_c.communicate()[0]                                       # OUTPUT OF COMMAND STORED IN 'S' AS BYTES
+    s = str(s).split('\\n\\n')[1:n_measure+1]
+    x = []
+    for i in s:
+        util = 100 - float(i.split(' ')[-1].strip('\\n\''))
+        x.append(util)
+    return max(x)

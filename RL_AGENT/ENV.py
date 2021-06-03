@@ -43,10 +43,28 @@ class env:
         self.ind += 1
         return [temp, volt, cpu_utils, sum(self.AVG_CPU_UTILS)/10]
 
-    def reward(self, l):
-        l #  yet to decide
-
-
+    def reward(self, state_info):
+        if state_info[0] < 40:
+            temp_rew = 1
+        elif 40 < state_info[0] < 70:
+            temp_rew = -state_info[0] // 20
+        elif 70 < state_info[0] < 80:
+            temp_rew = -20
+        else:
+            temp_rew = -100
+            
+        if state_info[2] < 30:
+            util_rew = -10
+        if 30 < state_info[2] < 60:
+            util_rew = 1
+        if 60 < state_info[2] < 80:
+            util_rew = state_info[2] // 20
+        if state_info[2] < 30:
+            util_rew = -50
+            
+        return temp_rew + util_rew
+            
+            
     def step(self, action):
         freq = self.cpu.available_frequencies     
         action = freq.index(action)                                # action given to a function is in range(0,10). convert to corresponding frequency
@@ -55,7 +73,8 @@ class env:
         except:
             print('UNABLE TO SET FREQ')
         done = False
-        return env.next_state(), env.reward(env.next_state()), done         
+        next_ = env.next_state() 
+        return next_, env.reward(next_), done         
 
 
     

@@ -20,7 +20,7 @@ class env():
     
     def temp_volt_utils(self):
         i = self.ind if self.ind < 10 else self.ind % 10
-        cpu_utils = exec_time(3)
+        cpu_utils = exec_time(2)
         self.AVG_CPU_UTILS[i] = cpu_utils  
         self.ind += 1
         return self.vcgm.measure_temp(), \
@@ -31,9 +31,40 @@ class env():
         return np.array([*self.temp_volt_utils()], dtype=np.float32)
 
     def reward(self, state_info):
-        pass
-            
-        return temp_rew + util_rew
+        
+        temp, util, avg_util = state_info[0], state_info[2], state_info[3]
+        rew = 0
+        self.done = False
+
+        if temp > 75:
+            if util > 80 and avg_util > 80:
+                rew = -150
+            elif 30 < util < 80 and 30 < avg_util < 80:
+                rew = -10
+
+        elif 55 < temp < 75:
+            if util > 80 and avg_util > 80:
+                rew = -10
+            elif 30 < util < 80 and 30 < avg_util < 80:
+                rew = -1
+
+        elif 40 < temp < 55:
+            if util > 80 and avg_util > 80:
+                rew = -100
+            elif 30 < util < 80 and 30 < avg_util < 80:
+                rew = -1
+
+        else:
+            if util > 80 and avg_util > 80:
+                rew = 1
+            elif util < 50 and avg_util < 50:
+                rew = 1        
+
+        if util < 30 or avg_util < 50:
+            self.done = True
+            rew = 1
+        
+        return rew
             
             
     def step(self, action):

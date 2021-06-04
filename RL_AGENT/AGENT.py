@@ -1,7 +1,6 @@
 import numpy as np
 import torch as T
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
                                                                                             # CREATING A CLASS FOR DEFINING THE FUNCTION APPROXIMATOR FOR DQN
 class DQN_PRED(nn.Module):
@@ -12,7 +11,7 @@ class DQN_PRED(nn.Module):
                                 nn.ReLU(inplace=True),
                                 nn.Linear(20, 10, bias=True),
                                 )
-        self.optimizer = optim.Adam(self.lin.parameters(),lr=lr)
+        self.optimizer = optim.RMSprop(self.lin.parameters(),lr=lr)
         self.loss = nn.MSELoss()                                                            # MSE LOSS USED, (Q_TARGET - Q_PRED) ** 2
 
     def forward(self, x):

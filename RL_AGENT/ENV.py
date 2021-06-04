@@ -42,15 +42,9 @@ class env():
             elif 30 < util < 80 and 30 < avg_util < 80:
                 rew = -10
 
-        elif 55 < temp < 75:
+        elif 60 < temp < 75:
             if util > 80 and avg_util > 80:
                 rew = -10
-            elif 30 < util < 80 and 30 < avg_util < 80:
-                rew = -1
-
-        elif 40 < temp < 55:
-            if util > 80 and avg_util > 80:
-                rew = -100
             elif 30 < util < 80 and 30 < avg_util < 80:
                 rew = -1
 
@@ -60,9 +54,9 @@ class env():
             elif util < 50 and avg_util < 50:
                 rew = 1        
 
-        if util < 30 or avg_util < 50:
+        if util < 30 or avg_util < 40:
             self.done = True
-            rew = 1
+            rew = -1
         
         return rew
             

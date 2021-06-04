@@ -12,14 +12,13 @@ class DQN_PRED(nn.Module):
                                 nn.ReLU(inplace=True),
                                 nn.Linear(20, 10, bias=True),
                                 )
-        #self.optimiser = optim.Adam(lr=lr)
+        self.optimizer = optim.Adam(self.lin.parameters(),lr=lr)
         self.loss = nn.MSELoss()                                                            # MSE LOSS USED, (Q_TARGET - Q_PRED) ** 2
 
     def forward(self, x):
-        inp = np.reshape(x, (1, 4))
         inp = T.tensor(x)
-        inp = inp.unsqueeze(0)
-        inp = inp.unsqueeze(1)
+        inp = T.flatten(inp, start_dim=1)
+        #inp = inp.unsqueeze(1)
         inp = self.lin(inp)
         return inp
 
@@ -36,11 +35,11 @@ class Agent(object):
 
         self.Q_eval = DQN_PRED(self.lr)                                                          # INSTANCE FOR NEURAL NETWORK CLASS
 
-        self.state_memory = np.zeros((self.mem_size, 4))                                    # (10000,4) STATE VECTOR CONTAINS 4 VALUES
+        self.state_memory = np.zeros((self.mem_size, 1, 4), dtype=np.float32)                                    # (10000,4) STATE VECTOR CONTAINS 4 VALUES
             
         self.action_memory = np.zeros(self.mem_size, dtype=np.float32)
 
-        self.reward_memory = np.zeros(self.mem_size)
+        self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
             
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.float32)                    # STORES WHETHER EPISODE IS COMPLETE OR NOT
     
@@ -62,15 +61,16 @@ class Agent(object):
         rand = np.random.random()
 
         if rand < self.epsilon:
-            action = np.random.choice(list(range(10)))                                      # TAKING RANDOM ACTION FOR EXPLORING VALUES FOR VARIOUS ACTIONS
+            action = np.random.choice(list(range(10)))                                     # TAKING RANDOM ACTION FOR EXPLORING VALUES FOR VARIOUS ACTIONS
         else:
+            observation = np.reshape(observation, (1,1,4))
             actions = self.Q_eval.forward(observation)
             action = T.argmax(actions).item()                                               # TAKING GREEDY ACTION
 
         return action
 
     def learn(self):
-        if self.mem_cntr > self.batch_size:
+        if self.mem_cntr >= self.batch_size:
 
             self.Q_eval.optimizer.zero_grad()                                               # FOR NULLIFYING GRADIENTS OF PREVIOUS BATCHES
 
@@ -91,10 +91,11 @@ class Agent(object):
             q_S_A = self.Q_eval.forward(new_state_batch)                                    # MAXIMUM VALUE FROM NEXT STATE
 
             batch_index = np.arange(self.batch_size, dtype=np.int32)                        # BATCHINDEX VALUES FOR UPDATING THE Q_TARGET
-        
+
+            #print(f'{q_target} \n {action_batch} \n {reward_batch} \n {T.max(q_S_A, dim=1)[0]}')
             q_target[batch_index, action_batch] = reward_batch + \
                           self.gamma * T.max(q_S_A, dim=1)[0] * terminal_batch              # Q_TARGET UPDATE
-
+            #print(f'after update {q_target}')
             self.epsilon = self.epsilon * self.eps_dec \
                 if self.epsilon > self.eps_min else self.eps_min                            # UPDATING EPSILON AS EPISODES PROGRESSES TO TAKE MORE OF GREEDY ACTION
 

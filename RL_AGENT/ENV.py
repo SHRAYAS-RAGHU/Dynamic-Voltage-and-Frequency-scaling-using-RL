@@ -28,29 +28,10 @@ class env():
                 cpu_utils, sum(self.AVG_CPU_UTILS)/10
 
     def get_state(self):
-        return [*self.temp_volt_utils()]
+        return np.array([*self.temp_volt_utils()], dtype=np.float32)
 
     def reward(self, state_info):
-        self.done = False
-        if state_info[0] < 40:
-            temp_rew = 1
-            self.done = True
-        elif 40 < state_info[0] < 70:
-            temp_rew = -state_info[0] / 20
-        elif 70 < state_info[0] < 80:
-            temp_rew = -20
-        else:
-            temp_rew = -100
-            
-        if state_info[2] < 30:
-            self.done = True
-            util_rew = 0
-        if 30 < state_info[2] < 60:
-            util_rew = 1
-        if 60 < state_info[2] < 80:
-            util_rew = -state_info[2] // 20
-        if state_info[2] > 80:
-            util_rew = -50
+        pass
             
         return temp_rew + util_rew
             
@@ -65,7 +46,7 @@ class env():
             print('UNABLE TO SET FREQ')
         
         next_ = self.get_state() 
-        return next_, self.reward(next_), self.done         
+        return np.reshape(next_, (1,4)), self.reward(next_), self.done         
 
 
     

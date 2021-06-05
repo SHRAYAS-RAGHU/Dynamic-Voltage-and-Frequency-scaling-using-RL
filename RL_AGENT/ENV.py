@@ -8,6 +8,7 @@ class env():
     def __init__(self):
         self.cpu = cpuFreq()
         self.vcgm = Vcgencmd()
+        self.old_action = 0
 
         try:
             self.cpu.set_governors('userspace')
@@ -30,12 +31,19 @@ class env():
     def get_state(self):
         return np.array([*self.temp_volt_utils()], dtype=np.float32)
 
-    def reward(self, state_info):
+    def reward(self, state_info, speed):
         
         temp, util, avg_util = state_info[0], state_info[2], state_info[3]
         rew = 0
         self.done = False
-
+        temp /= 20
+        ua = (util + avg_util)/40
+        rew = -(0.4*np.exp(ua)+0.3*np.exp(temp)+0.3*speed)
+        
+        if rew > -6:
+            self.done = True
+      
+        """
         if temp > 75:
             if util > 80 and avg_util > 80:
                 rew = -150
@@ -57,21 +65,23 @@ class env():
         if util < 30 or avg_util < 40:
             self.done = True
             rew = -1
+        """
         
         return rew
             
             
     def step(self, action):
         freq = self.cpu.available_frequencies     
-        action = freq[action]                                # action given to a function is in range(0,10). convert to corresponding frequency
-        
+        fre = freq[action]                                # action given to a function is in range(0,10). convert to corresponding frequency
+        speed = abs(action - self.old_action)
+        self.old_action = action
         try:
-            self.cpu.set_frequencies(action)
+            self.cpu.set_frequencies(fre)
         except:
             print('UNABLE TO SET FREQ')
         
         next_ = self.get_state() 
-        return np.reshape(next_, (1,4)), self.reward(next_), self.done         
+        return np.reshape(next_, (1,4)), self.reward(next_, speed*10), self.done         
 
 
     

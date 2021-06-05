@@ -11,7 +11,7 @@ class DQN_PRED(nn.Module):
                                 nn.ReLU(inplace=True),
                                 nn.Linear(20, 10, bias=True),
                                 )
-        self.optimizer = optim.RMSprop(self.lin.parameters(),lr=lr)
+        self.optimizer = optim.RMSprop(self.lin.parameters(),lr=lr, momentum=0.8)
         self.loss = nn.MSELoss()                                                            # MSE LOSS USED, (Q_TARGET - Q_PRED) ** 2
 
     def forward(self, x):

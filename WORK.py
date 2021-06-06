@@ -1,7 +1,9 @@
-import random
-a = list(range(10000))
+import time
 
-for i in range(10000):
-    for j in range(i+1, 10000):
-        if a[i] > a[j]:
-            a[j], a[i] = a[i], a[j]
+s = time.time()
+e = s + 15
+
+while s < e:
+    s = time.time()
+
+print('15 s')

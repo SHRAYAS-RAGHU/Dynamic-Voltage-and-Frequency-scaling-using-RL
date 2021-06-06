@@ -7,11 +7,11 @@ class DQN_PRED(nn.Module):
     def __init__(self, lr):
         super().__init__()
         self.lin = nn.Sequential(
-                                nn.Linear(4, 20, bias=True),
+                                nn.Linear(4, 25, bias=True),
                                 nn.ReLU(inplace=True),
-                                nn.Linear(20, 10, bias=True),
+                                nn.Linear(25, 10, bias=True),
                                 )
-        self.optimizer = optim.RMSprop(self.lin.parameters(),lr=lr, momentum=0.8)
+        self.optimizer = optim.Adam(self.lin.parameters(),lr=lr)
         self.loss = nn.MSELoss()                                                            # MSE LOSS USED, (Q_TARGET - Q_PRED) ** 2
 
     def forward(self, x):
@@ -98,7 +98,7 @@ class Agent(object):
             self.epsilon = self.epsilon * self.eps_dec \
                 if self.epsilon > self.eps_min else self.eps_min                            # UPDATING EPSILON AS EPISODES PROGRESSES TO TAKE MORE OF GREEDY ACTION
 
-            loss = self.Q_eval.loss(q_target, q_s_a)                                        # Q_TARGET - Q_PRED IS THE TD-ERROR AND MSE LOSS FINDS THE SQUARE OF IT
+            loss = self.Q_eval.loss(q_s_a, q_target)                                        # Q_TARGET - Q_PRED IS THE TD-ERROR AND MSE LOSS FINDS THE SQUARE OF IT
             loss.backward()                                                                 # BACKPROPAGATING THE LOSS TO FING GRADIENTS
 
             self.Q_eval.optimizer.step()                                                    # UPDATING THE PARAMETERS I.E WEIGHTS USING GRADIENT DESCENT FOR THE Q_VALUE FUNCTION

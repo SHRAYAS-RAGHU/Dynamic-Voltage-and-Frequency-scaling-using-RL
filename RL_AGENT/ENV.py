@@ -1,4 +1,5 @@
 import subprocess
+from numpy.lib.function_base import average
 from vcgencmd import Vcgencmd
 from cpufreq import cpuFreq
 import numpy as np
@@ -9,6 +10,7 @@ class env():
         self.cpu = cpuFreq()
         self.vcgm = Vcgencmd()
         self.old_action = 0
+        self.speed = 0
 
         try:
             self.cpu.set_governors('userspace')
@@ -20,7 +22,7 @@ class env():
         self.done = False
     
     def temp_volt_utils(self):
-        i = self.ind if self.ind < 10 else self.ind % 10
+        i = self.ind % 10
         cpu_utils = exec_time(2)
         self.AVG_CPU_UTILS[i] = cpu_utils  
         self.ind += 1
@@ -31,57 +33,37 @@ class env():
     def get_state(self):
         return np.array([*self.temp_volt_utils()], dtype=np.float32)
 
-    def reward(self, state_info, speed):
+    def reward(self, state_info, f, speed):
         
         temp, util, avg_util = state_info[0], state_info[2], state_info[3]
         rew = 0
         self.done = False
-        temp /= 20
-        ua = (util + avg_util)/40
-        rew = -(0.4*np.exp(ua)+0.3*np.exp(temp)+0.3*speed)
+        temp /= 20                    # TEMP (0 - 5)
+        ratio = avg_util / (f+1)
+        ratio_rew = -1.11 * ratio ** 2 + 22.22 * ratio - 101.1
         
-        if rew > -6:
+        rew = ratio_rew - (0.5*np.exp(temp) + 0.5*speed)
+        #print('rew', rew)
+        if util < 30 and rew >= -10:
             self.done = True
-      
-        """
-        if temp > 75:
-            if util > 80 and avg_util > 80:
-                rew = -150
-            elif 30 < util < 80 and 30 < avg_util < 80:
-                rew = -10
 
-        elif 60 < temp < 75:
-            if util > 80 and avg_util > 80:
-                rew = -10
-            elif 30 < util < 80 and 30 < avg_util < 80:
-                rew = -1
-
-        else:
-            if util > 80 and avg_util > 80:
-                rew = 1
-            elif util < 50 and avg_util < 50:
-                rew = 1        
-
-        if util < 30 or avg_util < 40:
-            self.done = True
-            rew = -1
-        """
-        
         return rew
             
             
     def step(self, action):
         freq = self.cpu.available_frequencies     
         fre = freq[action]                                # action given to a function is in range(0,10). convert to corresponding frequency
-        speed = abs(action - self.old_action)
+        
+        self.speed = abs(action - self.old_action)
         self.old_action = action
+        
         try:
             self.cpu.set_frequencies(fre)
         except:
             print('UNABLE TO SET FREQ')
         
         next_ = self.get_state() 
-        return np.reshape(next_, (1,4)), self.reward(next_, speed*10), self.done         
+        return np.reshape(next_, (1,4)), self.reward(next_, action, self.speed*5), self.done     
 
 
     

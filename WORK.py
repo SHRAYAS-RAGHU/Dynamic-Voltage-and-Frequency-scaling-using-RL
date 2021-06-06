@@ -1,9 +1,9 @@
-import time
+import matplotlib.pyplot as plt
+import numpy as np
+ratio = np.array(list(range(0,100)))
+ratio_rew = (ratio <= 20) * (-1.11 * ratio ** 2 + 22.22 * ratio - 101.1) \
+                    + (ratio >= 21) * (-100-ratio)
 
-s = time.time()
-e = s + 15
-
-while s < e:
-    s = time.time()
-
-print('15 s')
+plt.plot(ratio, ratio_rew)
+plt.grid(True)
+plt.show()

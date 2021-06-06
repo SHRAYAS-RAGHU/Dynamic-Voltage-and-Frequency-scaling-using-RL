@@ -40,7 +40,8 @@ class env():
         self.done = False
         temp /= 20                    # TEMP (0 - 5)
         ratio = avg_util / (f+1)
-        ratio_rew = -1.11 * ratio ** 2 + 22.22 * ratio - 101.1
+        ratio_rew = (ratio <= 20) * (-1.11 * ratio ** 2 + 22.22 * ratio - 101.1) \
+                    + (ratio >= 21) * (-100-ratio)
         
         rew = ratio_rew - (0.5*np.exp(temp) + 0.5*speed)
         #print('rew', rew)

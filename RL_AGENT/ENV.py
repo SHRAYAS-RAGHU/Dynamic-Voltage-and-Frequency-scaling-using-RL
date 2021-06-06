@@ -1,5 +1,3 @@
-import subprocess
-from numpy.lib.function_base import average
 from vcgencmd import Vcgencmd
 from cpufreq import cpuFreq
 import numpy as np
@@ -19,7 +17,7 @@ class env():
 
         self.AVG_CPU_UTILS = np.zeros((10,))
         self.ind = 0
-        self.done = False
+        #self.done = False
     
     def temp_volt_utils(self):
         i = self.ind % 10
@@ -27,7 +25,6 @@ class env():
         self.AVG_CPU_UTILS[i] = cpu_utils  
         self.ind += 1
         return self.vcgm.measure_temp(), \
-            self.vcgm.measure_volts('core'), \
                 cpu_utils, sum(self.AVG_CPU_UTILS)/10
 
     def get_state(self):
@@ -35,18 +32,18 @@ class env():
 
     def reward(self, state_info, f, speed):
         
-        temp, util, avg_util = state_info[0], state_info[2], state_info[3]
+        temp, util, avg_util = state_info[0], state_info[1], state_info[2]
         rew = 0
-        self.done = False
+        #self.done = False
         temp /= 20                    # TEMP (0 - 5)
         ratio = avg_util / (f+1)
-        ratio_rew = (ratio <= 20) * (-1.11 * ratio ** 2 + 22.22 * ratio - 101.1) \
-                    + (ratio >= 21) * (-100-ratio)
+        ratio_rew = (ratio < 5) * (-100-ratio*10) + (5 <= ratio <= 20) * (-1.11 * ratio ** 2 + 22.22 * ratio - 101.1) \
+                    + (ratio > 15) * (-100-ratio)
         
         rew = ratio_rew - (0.5*np.exp(temp) + 0.5*speed)
         #print('rew', rew)
-        if util < 30 and rew >= -10:
-            self.done = True
+        #if util < 30 and rew >= -10:
+        #    self.done = True
 
         return rew
             
@@ -64,7 +61,7 @@ class env():
             print('UNABLE TO SET FREQ')
         
         next_ = self.get_state() 
-        return np.reshape(next_, (1,4)), self.reward(next_, action, self.speed*5), self.done     
+        return np.reshape(next_, (1,3)), self.reward(next_, action, self.speed*5) # add self.done if needed
 
 
     

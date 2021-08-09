@@ -2,6 +2,7 @@
 run the command from terminal :sudo stress --cpu 4 --io 3 --vm 2 --vm-bytes 128M --timeout 10s
 run the code from vS_terminal : python3 exec_time.py
 """
+
 import subprocess
 
 def exec_time(n):
@@ -15,4 +16,5 @@ def exec_time(n):
     for i in s:
         util = 100 - float(i.split(' ')[-1].strip('\\n\''))
         x.append(util)
+    
     return max(x)

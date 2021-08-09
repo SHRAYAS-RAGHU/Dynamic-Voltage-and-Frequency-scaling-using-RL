@@ -2,6 +2,8 @@ from vcgencmd import Vcgencmd
 from cpufreq import cpuFreq
 import numpy as np
 from EXEC_TIME import exec_time
+from CPU_LOAD import measure_load
+from MEMORY import mem_free
 
 class env():
     def __init__(self):
@@ -17,34 +19,39 @@ class env():
 
         self.AVG_CPU_UTILS = np.zeros((10,))
         self.ind = 0
-        #self.done = False
     
-    def temp_volt_utils(self):
+    def temp_utils(self):
         i = self.ind % 10
-        cpu_utils = exec_time(2)
+        cpu_utils = exec_time(2) / 100
         self.AVG_CPU_UTILS[i] = cpu_utils  
         self.ind += 1
-        return self.vcgm.measure_temp(), \
-                cpu_utils, sum(self.AVG_CPU_UTILS)/10
+        
+        return self.vcgm.measure_temp() / 80, \
+                cpu_utils, sum(self.AVG_CPU_UTILS) / 10
 
     def get_state(self):
-        return np.array([*self.temp_volt_utils()], dtype=np.float32)
+        """
+        RETURNS :       [TEMP, UTILS, AVG-UTILS, FREE_MEM, AVG-LOAD-1-MIN]
+        NORMALISED:     [0-80, 0-100, 0-100, , 200MB to 1.83GB, no.of process on 4 cpus]
+        """
+        self.load = float(measure_load())/4   # 4 CPUS
+        self.mem_free = mem_free()
+        return np.array([*self.temp_utils(), self.mem_free, self.load], dtype=np.float32)
 
     def reward(self, state_info, f, speed):
-        
-        temp, util, avg_util = state_info[0], state_info[1], state_info[2]
+        # f : 1 to 10 for 600 - 1500 MHz here
+        temp, util, avg_util, free_mem, load = state_info
         rew = 0
-        #self.done = False
-        temp /= 20                    # TEMP (0 - 5)
-        ratio = avg_util / (f+1)
-        ratio_rew = (ratio < 5) * (-100-ratio*10) + (5 <= ratio <= 20) * (-1.11 * ratio ** 2 + 22.22 * ratio - 101.1) \
-                    + (ratio > 15) * (-100-ratio)
-        
-        rew = ratio_rew - (0.5*np.exp(temp) + 0.5*speed)
-        #print('rew', rew)
-        #if util < 30 and rew >= -10:
-        #    self.done = True
+        K_T, K_S, K_U = 2, 0.5, 1
 
+        rew_F_U = -abs(np.ceil(avg_util*10) - f)
+        rew_F_M = 1 if -(f-11)/np.ceil(free_mem*10) == 1 else - 1
+        rew_L = -util * load
+
+        rew = -K_T * np.exp(temp) + -K_S * np.exp(speed) +\
+                K_U * (rew_F_U + rew_F_M + rew_L)
+
+        #print(f'\nREW : TEMP:{-K_T * np.exp(temp)}  SPEED:{-K_S * np.exp(speed)}  F_U:{0.7*rew_F_U} F_M:{0.3*rew_F_M } L:{rew_L}')
         return rew
             
             
@@ -61,7 +68,7 @@ class env():
             print('UNABLE TO SET FREQ')
         
         next_ = self.get_state() 
-        return np.reshape(next_, (1,3)), self.reward(next_, action, self.speed*5) # add self.done if needed
+        return np.reshape(next_, (1,5)), self.reward(next_, action+1, self.speed/10) # add self.done if needed
 
 
     

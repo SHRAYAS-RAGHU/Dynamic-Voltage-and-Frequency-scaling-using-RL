@@ -1,0 +1,23 @@
+A typical real-time task is composed of a repetition of computation phases
+(task instances, or jobs) which are activated on a periodic or sporadic fashion.
+Each job J_j (where J_j is the j^th job of the task) is characterized by
+an arrival time r_j (the time when the job starts), 
+an amount of computation time c_j needed to finish the job, and a 
+job absolute deadline d_j, which is the time within which the job should be finished.
+The maximum execution time max{c_j} is called “Worst Case Execution Time” (WCET) for the task.
+A real-time task can be periodic with period P if r_{j+1} = r_j + P, or
+sporadic with minimum inter-arrival time P is r_{j+1} >= r_j + P.
+Finally, d_j = r_j + D, where D is the task’s relative deadline.
+Summing up, a real-time task can be described as
+
+Task = (WCET, D, P)
+
+The utilization of a real-time task is defined as the ratio between
+	 its WCET and its period (or minimum inter-arrival time), 
+and represents the fraction of CPU time needed to execute the task.
+
+If the total utilization U=sum(WCET_i/P_i) is larger than M (with M equal to the number of CPUs), then the scheduler is unable to respect all the deadlines. Note that total utilization is defined as the sum of the utilizations WCET_i/P_i over all the real-time tasks in the system. When considering multiple real-time tasks, the parameters of the i-th task are indicated with the “_i” suffix. Moreover, if the total utilization is larger than M, then we risk starving non- real-time tasks by real-time tasks. If, instead, the total utilization is smaller than M, then non real-time tasks will not be starved and the system might be able to respect all the deadlines. As a matter of fact, in this case it is possible to provide an upper bound for tardiness (defined as the maximum between 0 and the difference between the finishing time of a job and its absolute deadline). More precisely, it can be proven that using a global EDF scheduler the maximum tardiness of each task is smaller or equal than
+
+((M − 1) · WCET_max − WCET_min)/(M − (M − 2) · U_max) + WCET_max
+
+where WCET_max = max{WCET_i} is the maximum WCET, WCET_min=min{WCET_i} is the minimum WCET, and U_max = max{WCET_i/P_i} is the maximum utilization[12].

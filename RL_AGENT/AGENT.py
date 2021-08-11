@@ -148,16 +148,16 @@ class Agent(object):
             
             #print('batch', batch)
             
-            state_batch = T.tensor(self.state_memory[batch], dtype = T.float32)
-            action_batch = T.tensor(self.action_memory[batch], dtype = T.long)           
-            reward_batch = T.tensor(self.reward_memory[batch], dtype = T.float32)                              # COLLECTING REQUIRED PARAMETERS FROM TRANSITION MEMORY FOR A GIVEN BATCH
+            state_batch = T.tensor(self.state_memory[batch], dtype = T.float32)#(32,4)
+            action_batch = T.tensor(self.action_memory[batch], dtype = T.long) #(32,)          
+            reward_batch = T.tensor(self.reward_memory[batch], dtype = T.float32)#(32,)                          # COLLECTING REQUIRED PARAMETERS FROM TRANSITION MEMORY FOR A GIVEN BATCH
             next_state_batch = T.tensor(self.state_memory[batch + 1], dtype = T.float32)
 
-            batch_index = np.arange(self.batch_size, dtype=np.int32)                        # BATCHINDEX VALUES FOR UPDATING THE Q_TARGET
+            batch_index = np.arange(self.batch_size, dtype=np.int32)    #(32,)                    # BATCHINDEX VALUES FOR UPDATING THE Q_TARGET
 
             #print(self.Q_eval.forward(state_batch, 'online'))
 
-            q_s_a = self.Q_eval.forward(state_batch, 'online')[batch_index, action_batch]                                        # Q_PRED FOR THE UPDATE
+            q_s_a = self.Q_eval.forward(state_batch, 'online')[batch_index, action_batch]        #(32*10)[32,32] -->(32,)-->values for each column in the batch                               # Q_PRED FOR THE UPDATE
             
             with T.no_grad():
                 best_action = T.argmax(self.Q_eval.forward(next_state_batch, 'online'), dim = 1)
